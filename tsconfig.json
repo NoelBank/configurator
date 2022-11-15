@@ -15,6 +15,6 @@
     "jsx": "preserve",
     "incremental": true
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "libs/configurator/configurator.test.tsm"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules"]
 }
