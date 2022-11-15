@@ -1,4 +1,4 @@
-import { Context, Step, Question } from "./types";
+import { Context, Question, Step } from "./types";
 
 class Configurator<TContext extends Context> {
   private history: string[] = [];

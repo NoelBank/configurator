@@ -1,0 +1,3 @@
+- [ ] Get Error Message if nextStep can't not be executed
+- [ ] Implement Configurator with useHook
+- [ ]
