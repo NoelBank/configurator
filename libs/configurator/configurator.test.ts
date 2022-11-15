@@ -10,6 +10,10 @@ const configuratorOptions = {
   },
 };
 
+/**
+ * @jest-environment node
+ */
+
 describe("Power-Gas Configurator", () => {
   test("start configurator", () => {
     const configurator = new Configurator(
