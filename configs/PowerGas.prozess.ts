@@ -18,7 +18,7 @@ type PowerGasContext = {
 const POWER_GAS_CONFIG: Configuration<PowerGasContext> = [
   {
     id: "gatekeeper",
-    path: "/gatekeeper",
+    path: "/ihre-angaben",
     fields: [
       {
         id: "address",
@@ -57,6 +57,10 @@ const POWER_GAS_CONFIG: Configuration<PowerGasContext> = [
         isAvailable: (context) => (context.gasConsumption ?? 0) > 0,
       },
     ],
+  },
+  {
+    id: "result",
+    path: "/abschluss",
   },
 ];
 
