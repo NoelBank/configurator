@@ -1,11 +1,4 @@
-import { Configuration } from "./types";
-
-type Field<TContext, TField extends keyof TContext = keyof TContext> = {
-  id: TField;
-  isAvailable?: (context: TContext) => boolean;
-  onSubmit?: (context: TContext, data: TContext[TField]) => TContext;
-  optional?: boolean;
-};
+import { BaseField, Configuration } from "./types";
 
 const DEFAULT_SUBMITTER =
   <TContext, TField extends keyof TContext = keyof TContext>(field: TField) =>
@@ -16,7 +9,7 @@ const DEFAULT_SUBMITTER =
 
 export class Prozess<TContext> {
   private fields: {
-    [F in keyof TContext]?: Field<TContext>;
+    [F in keyof TContext]?: BaseField<TContext>;
   };
   private context: TContext;
   private history: string[] = [];
@@ -29,10 +22,12 @@ export class Prozess<TContext> {
     this.fields = Object.fromEntries(
       configuration.flatMap(
         (step) =>
-          step.fields?.map((field) => [field.id, field as Field<TContext>]) ??
-          []
+          step.fields?.map((field) => [
+            field.id,
+            field as unknown as BaseField<TContext>,
+          ]) ?? []
       )
-    ) as Partial<Record<keyof TContext, Field<TContext>>>;
+    ) as Partial<Record<keyof TContext, BaseField<TContext>>>;
   }
 
   private get currentStatus() {
@@ -41,13 +36,12 @@ export class Prozess<TContext> {
     }
 
     const fieldsInStep =
-      (this.configuration.find((step) => step.id === this.currentStep)
-        ?.fields as Field<TContext>[]) ?? [];
+      (this.getStep(this.currentStep)!.fields as BaseField<TContext>[]) ?? [];
 
-    return fieldsInStep.map((field) => [
-      field.id,
-      field.optional || this.isSet(field.id),
-    ]) as [keyof TContext, boolean][];
+    return fieldsInStep.map((field) => [field.id, this.isFieldSet(field)]) as [
+      keyof TContext,
+      boolean
+    ][];
   }
 
   public get currentStep() {
@@ -58,7 +52,7 @@ export class Prozess<TContext> {
 
   public get data() {
     const fieldsToInclude = (
-      Object.entries(this.fields) as [keyof TContext, Field<TContext>][]
+      Object.entries(this.fields) as [keyof TContext, BaseField<TContext>][]
     )
       .filter(([_id, field]) =>
         field.isAvailable ? field.isAvailable(this.context) : true
@@ -74,8 +68,12 @@ export class Prozess<TContext> {
     );
   }
 
-  private isSet(field: keyof TContext) {
-    return field in this.context && this.context[field] !== undefined;
+  private getStep(id: string | undefined) {
+    return this.configuration.find((step) => step.id === id);
+  }
+
+  private isFieldSet(field: BaseField<TContext>) {
+    return field.id in this.context && this.context[field.id] !== undefined;
   }
 
   public navigateTo(step: string) {
@@ -83,11 +81,26 @@ export class Prozess<TContext> {
   }
 
   public next() {
-    const invalidFields =
-      this.currentStatus?.filter(([_field, isValid]) => !isValid) ?? [];
+    const nativeInvalidFields =
+      this.currentStatus
+        ?.filter(([_field, isValid]) => !isValid)
+        ?.map(([field]) => field) ?? [];
 
-    if (invalidFields.length) {
-      throw invalidFields;
+    const customValidator = this.getStep(this.currentStep)?.isValid;
+
+    if (customValidator) {
+      let invalidFields = [...nativeInvalidFields];
+      const markAsInvalid = (...fields: (keyof TContext)[]) =>
+        invalidFields.push(...fields);
+      const isValid = customValidator(this.context, markAsInvalid);
+
+      if (!isValid) {
+        throw Array.from(new Set(invalidFields));
+      }
+    }
+
+    if (nativeInvalidFields.length) {
+      throw nativeInvalidFields;
     }
 
     for (const step of this.configuration) {
@@ -96,11 +109,11 @@ export class Prozess<TContext> {
         return step;
       }
 
-      for (const field of step.fields! as Field<TContext>[]) {
+      for (const field of step.fields! as BaseField<TContext>[]) {
         if (
           field.isAvailable
             ? field.isAvailable(this.context)
-            : true && !this.isSet(field.id)
+            : true && !this.isFieldSet(field)
         ) {
           this.navigateTo(step.id);
           return step;
@@ -114,9 +127,7 @@ export class Prozess<TContext> {
       throw Error("There is no step to go back to.");
     }
 
-    const step = this.configuration.find(
-      (step) => step.id === this.history.at(-2)!
-    )!;
+    const step = this.getStep(this.history.at(-2)!)!;
     !!step.fields?.length && this.history.pop();
 
     this.navigateTo(step.id);

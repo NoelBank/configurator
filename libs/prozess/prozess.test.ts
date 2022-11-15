@@ -93,49 +93,77 @@ describe("prozess", () => {
     });
   });
 
-  // test("fill gatekeeper and go to power step", () => {
-  //   const configurator = new Configurator(
-  //     "power-gas",
-  //     configuration,
-  //     configuratorOptions
-  //   );
+  describe("when navigating to the next step", () => {
+    it("throws when fields are invalid", () => {
+      const configurator = new Prozess(POWER_GAS_CONFIG);
+      configurator.start();
 
-  //   configurator.start();
+      configurator.submit("address", {
+        city: "Hannover",
+        number: "4",
+        street: "Hanomaghof",
+        zipCode: "30449",
+      });
 
-  //   configurator.submitQuestion("address", {
-  //     street: "Teststraße",
-  //     number: "1",
-  //     zip: "12345",
-  //     city: "Teststadt",
-  //   });
-  //   configurator.submitQuestion("powerConsumption", 1000);
-  //   configurator.submitQuestion("gasConsumption", 1000);
-  //   configurator.nextStep();
+      expect(() => configurator.next()).toThrow();
+    });
 
-  //   expect(configurator.currentStep?.id).toBe("power");
-  // });
+    it("throws with the invalid fields, when there are any", () => {
+      const configurator = new Prozess(POWER_GAS_CONFIG);
+      configurator.start();
 
-  // test("fill gatekeeper and go to gas step", () => {
-  //   const configurator = new Configurator(
-  //     "power-gas",
-  //     configuration,
-  //     configuratorOptions
-  //   );
+      configurator.submit("address", {
+        city: "Hannover",
+        number: "4",
+        street: "Hanomaghof",
+        zipCode: "30449",
+      });
 
-  //   configurator.start();
+      try {
+        configurator.next();
+        fail("This should throw!");
+      } catch (invalidFields) {
+        expect(invalidFields).toContain("gasConsumption");
+        expect(invalidFields).toContain("powerConsumption");
+      }
+    });
 
-  //   configurator.submitQuestion("address", {
-  //     street: "Teststraße",
-  //     number: "1",
-  //     zip: "12345",
-  //     city: "Teststadt",
-  //   });
-  //   configurator.submitQuestion("powerConsumption", 0);
-  //   configurator.submitQuestion("gasConsumption", 1000);
-  //   configurator.nextStep();
+    it("selects the next required and available field #2", () => {
+      const configurator = new Prozess(POWER_GAS_CONFIG);
+      configurator.start();
 
-  //   expect(configurator.currentStep?.id).toBe("gas");
-  // });
+      configurator.submit("address", {
+        city: "Hannover",
+        number: "4",
+        street: "Hanomaghof",
+        zipCode: "30449",
+      });
+
+      configurator.submit("gasConsumption", null);
+      configurator.submit("powerConsumption", 1);
+
+      expect(() => configurator.next()).not.toThrow();
+      expect(configurator.currentStep).toEqual(POWER_GAS_CONFIG[1].id);
+    });
+
+    it("selects the next required and available field #2", () => {
+      const configurator = new Prozess(POWER_GAS_CONFIG);
+      configurator.start();
+
+      configurator.submit("address", {
+        city: "Hannover",
+        number: "4",
+        street: "Hanomaghof",
+        zipCode: "30449",
+      });
+
+      configurator.submit("gasConsumption", 1);
+      configurator.submit("powerConsumption", null);
+
+      expect(() => configurator.next()).not.toThrow();
+      expect(configurator.currentStep).toEqual(POWER_GAS_CONFIG[2].id);
+    });
+  });
 
   // test("fill gas and open crossssssselling to get back to power", () => {
   //   const configurator = new Configurator(
