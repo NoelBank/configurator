@@ -11,12 +11,14 @@ type PowerGasContext = {
   address?: Address;
   gasConsumption?: number;
   powerConsumption?: number;
+  powerTariff?: string;
+  gasTariff?: string;
 };
 
 const POWER_GAS_CONFIG: Configuration<PowerGasContext> = [
   {
     id: "gatekeeper",
-    path: "/gatekeeper",
+    path: "/ihre-angaben",
     fields: [
       {
         id: "address",
@@ -28,6 +30,30 @@ const POWER_GAS_CONFIG: Configuration<PowerGasContext> = [
         id: "gasConsumption",
       },
     ],
+  },
+  {
+    id: "power",
+    path: "/strom",
+    fields: [
+      {
+        id: "powerTariff",
+        isAvailable: (context) => context.powerConsumption !== 0,
+      },
+    ],
+  },
+  {
+    id: "gas",
+    path: "/gas",
+    fields: [
+      {
+        id: "gasTariff",
+        isAvailable: (context) => context.gasConsumption !== 0,
+      },
+    ],
+  },
+  {
+    id: "result",
+    path: "/abschluss",
   },
 ];
 

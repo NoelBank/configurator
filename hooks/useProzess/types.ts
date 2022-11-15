@@ -1,3 +1,5 @@
+import { Configuration } from "../../libs/prozess/types";
+
 export type UseProzessOptions<State> = {
   /**
    * The name of the prozess. This is used to identify the prozess in the
@@ -8,7 +10,7 @@ export type UseProzessOptions<State> = {
   /**
    * Define Steps with Fields and their constraints.
    */
-  config: "Config";
+  config: Configuration<State>;
 
   /**
    * The initial state of the prozess. This is used to reset the prozess.

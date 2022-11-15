@@ -1,17 +1,18 @@
 /** @jest-environment jsdom */
 import { renderHook, act } from "@testing-library/react";
+import POWER_GAS_CONFIG from "../../configs/PowerGas.prozess";
 import useProzess from "./useProzess";
 
-xdescribe("useProzess", () => {
-  test("should increment counter", () => {
+describe("useProzess", () => {
+  test("should create a prozess", () => {
     const { result } = renderHook(() =>
-      useProzess({ config: "Config", initialState: 0, name: "test" })
+      useProzess({
+        config: POWER_GAS_CONFIG,
+        initialState: {},
+        name: "power-gas-configurator",
+      })
     );
 
-    act(() => {
-      result.current[1](1);
-    });
-
-    expect(result.current[0]).toBe(1);
+    expect(result.current).toBeDefined();
   });
 });
