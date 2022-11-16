@@ -7,7 +7,7 @@ type Address = {
   city: string;
 };
 
-type PowerGasContext = {
+export type PowerGasContext = {
   address?: Address;
   gasConsumption?: number | null;
   gasTariff?: string;

@@ -1,19 +1,39 @@
-import { Configuration } from "../../libs/prozess/types";
+export type Configuration<TContext> = Step<TContext>[];
 
-export type UseProzessOptions<State> = {
+export type BaseField<
+  TContext,
+  TField extends keyof TContext = keyof TContext
+> = {
+  id: TField;
+  isAvailable?: (context: TContext) => boolean;
+  onSubmit?: (context: TContext, data: TContext[TField]) => TContext;
+};
+
+export type Field<
+  TContext,
+  TField extends keyof TContext = keyof TContext
+> = TField extends any ? BaseField<TContext, TField> : never;
+
+export type MarkAsInvalidFn<TContext> = (...fields: (keyof TContext)[]) => void;
+
+export type Step<TContext> = {
+  id: string;
+  isValid?: (
+    context: TContext,
+    markAsInvalid: MarkAsInvalidFn<TContext>
+  ) => boolean;
+  fields?: Field<TContext>[];
+  path: string;
+};
+
+export type UseProzessOptions<TContext> = {
   /**
    * The name of the prozess. This is used to identify the prozess in the
    * logs and the Store.
    */
   name: string;
 
-  /**
-   * Define Steps with Fields and their constraints.
-   */
-  config: Configuration<State>;
+  configuration: Configuration<TContext>;
 
-  /**
-   * The initial state of the prozess. This is used to reset the prozess.
-   */
-  initialState: State;
+  initialContext?: TContext;
 };
